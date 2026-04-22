@@ -1,31 +1,81 @@
+"""
+Concept: Soul, Karma, and Rebirth (Inspired by the Bhagavad Gita)
+
+This program models:
+- Soul (eternal)
+- Body (temporary)
+- Karma (good/bad actions)
+- Prarabdha (fixed karma for current life)
+- Moksha (liberation from rebirth)
+
+Prarabdha is the portion of accumulated karma that has begun
+to bear fruit in the current life and cannot be changed.
+
+https://medium.com/@mitali209/prarabdha-d0cfaa57bab8
+
+"""
+
+import random
+
+class Paramatma:
+    def __init__(self):
+        self.merged_souls = []
+
+    def merge(self, soul):
+        print(f"{soul.name} has merged into Paramatma ✨")
+        self.merged_souls.append(soul)
+
+paramatma = Paramatma()
+
 class Soul:
     def __init__(self, name):
         self.name = name
         self.karma = 0
+        self.total_good = 0 
+        self.total_bad = 0 
         self.current_body = None
+        self.life_count = 0
+        self.prarabdha = 0
 
     def do_good(self, points=10):
         self.karma += points
+        self.total_good += points
         print(f"{self.name} did GOOD → +{points} | Total karma: {self.karma}")
 
     def do_bad(self, points=10):
         self.karma -= points
+        self.total_bad += points
         print(f"{self.name} did BAD → -{points} | Total karma: {self.karma}")
+
+    def do_detached_action(self):
+        print("Action without attachment → no karma added")
+
+    def generate_prarabdha(self):
+        good_part = random.randint(0, self.total_good) if self.total_good > 0 else 0
+        bad_part = random.randint(0, self.total_bad) if self.total_bad > 0 else 0
+        return good_part - bad_part
 
     def check_moksha(self):
         if abs(self.karma) < 5:
             print(f"{self.name} attained Moksha 🕊️ (no more rebirth)")
+            paramatma.merge(self)
             return True
         return False
 
     def incarnate(self, body):
-        # 🔹 Check moksha BEFORE taking new body
         if self.check_moksha():
             return
 
+        self.life_count += 1
+
+        #Fix prarabdha for this life
+        self.prarabdha = self.generate_prarabdha()
+
         self.current_body = body
         body.soul = self
-        print(f"{self.name} is born in {body}")
+
+        print(f"{self.name} is born in {body} | Life #{self.life_count}")
+        print(f"Prarabdha for this life → {self.prarabdha}")
 
     def leave_body(self):
         if self.current_body:
@@ -34,53 +84,50 @@ class Soul:
             self.current_body = None
 
     def next_body_type(self):
-        if self.karma >= 50:
+        if self.prarabdha >= 50:
             return "Heavenly Being"
-        elif self.karma >= 10:
+        elif self.prarabdha >= 10:
             return "Human (Good Life)"
-        elif self.karma >= -20:
+        elif self.prarabdha >= -20:
             return "Human (Struggling Life)"
         else:
             return "Lower Life Form"
 
-    def rebirth(self, new_body_id):
-        self.leave_body()
-
-        # 🔹 Also check moksha before rebirth cycle
-        if self.check_moksha():
-            return
-
-        next_type = self.next_body_type()
-        new_body = Body(new_body_id, next_type)
-        self.incarnate(new_body)
-
 
 class Body:
-    def __init__(self, body_id, body_type):
-        self.body_id = body_id
+    def __init__(self, body_type):
         self.body_type = body_type
         self.soul = None
 
     def __str__(self):
-        return f"Body({self.body_id}, {self.body_type})"
+        return f"Body({self.body_type})"
 
 
+# 🔁 Lifecycle simulation
 soul = Soul("Atman")
 
-# First birth
-body1 = Body(1, "Human")
-soul.incarnate(body1)
+while True:
+    print("\n--- New Life ---")
 
-# Actions in life
-soul.do_good(30)
-soul.do_bad(5)
-soul.do_good(40)
+    if soul.check_moksha():
+        break
 
-# Death + rebirth
-soul.rebirth(2)
+    body = Body("Unknown")  # placeholder, updated after prarabdha
+    soul.incarnate(body)
 
-# More actions
-soul.do_bad(60)
+    # Update body type after prarabdha is known
+    body.body_type = soul.next_body_type()
 
-# Next rebirth
-soul.rebirth(3)
+    # Life actions
+    for _ in range(random.randint(2, 4)):
+        action = random.choice(["good", "bad", "detached"])
+
+        if action == "good":
+            soul.do_good(random.randint(5, 20))
+        elif action == "bad":
+            soul.do_bad(random.randint(5, 20))
+        else:
+            soul.do_detached_action()
+
+    # End of life
+    soul.leave_body()
