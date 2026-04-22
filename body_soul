@@ -1,0 +1,86 @@
+class Soul:
+    def __init__(self, name):
+        self.name = name
+        self.karma = 0
+        self.current_body = None
+
+    def do_good(self, points=10):
+        self.karma += points
+        print(f"{self.name} did GOOD → +{points} | Total karma: {self.karma}")
+
+    def do_bad(self, points=10):
+        self.karma -= points
+        print(f"{self.name} did BAD → -{points} | Total karma: {self.karma}")
+
+    def check_moksha(self):
+        if abs(self.karma) < 5:
+            print(f"{self.name} attained Moksha 🕊️ (no more rebirth)")
+            return True
+        return False
+
+    def incarnate(self, body):
+        # 🔹 Check moksha BEFORE taking new body
+        if self.check_moksha():
+            return
+
+        self.current_body = body
+        body.soul = self
+        print(f"{self.name} is born in {body}")
+
+    def leave_body(self):
+        if self.current_body:
+            print(f"{self.name} left {self.current_body}")
+            self.current_body.soul = None
+            self.current_body = None
+
+    def next_body_type(self):
+        if self.karma >= 50:
+            return "Heavenly Being"
+        elif self.karma >= 10:
+            return "Human (Good Life)"
+        elif self.karma >= -20:
+            return "Human (Struggling Life)"
+        else:
+            return "Lower Life Form"
+
+    def rebirth(self, new_body_id):
+        self.leave_body()
+
+        # 🔹 Also check moksha before rebirth cycle
+        if self.check_moksha():
+            return
+
+        next_type = self.next_body_type()
+        new_body = Body(new_body_id, next_type)
+        self.incarnate(new_body)
+
+
+class Body:
+    def __init__(self, body_id, body_type):
+        self.body_id = body_id
+        self.body_type = body_type
+        self.soul = None
+
+    def __str__(self):
+        return f"Body({self.body_id}, {self.body_type})"
+
+
+soul = Soul("Atman")
+
+# First birth
+body1 = Body(1, "Human")
+soul.incarnate(body1)
+
+# Actions in life
+soul.do_good(30)
+soul.do_bad(5)
+soul.do_good(40)
+
+# Death + rebirth
+soul.rebirth(2)
+
+# More actions
+soul.do_bad(60)
+
+# Next rebirth
+soul.rebirth(3)
